@@ -87,7 +87,9 @@ input[type=number]{
 .progress-bar{height:6px;border-radius:999px;background:var(--border);overflow:hidden;margin-bottom:14px;}
 .progress-fill{height:100%;background:var(--accent);transition:width .2s;}
 .qmeta{display:flex;justify-content:space-between;align-items:center;font-size:.78rem;color:var(--muted);margin-bottom:10px;}
-.score-pill{font-weight:700;color:var(--text);}
+.score-pill{font-weight:700;color:var(--text);font-size:.85rem;transition:color .15s;}
+.score-pill.score-pass{color:var(--green);}
+.score-pill.score-fail{color:var(--red);}
 .qtext{font-size:1rem;font-weight:600;margin-bottom:14px;}
 .hint{display:inline-block;font-size:.72rem;color:var(--accent-dark);background:color-mix(in srgb, var(--accent) 12%, var(--panel));padding:2px 8px;border-radius:999px;margin-bottom:10px;font-weight:600;}
 .qimg{max-width:100%;border-radius:10px;border:1px solid var(--border);display:block;margin-bottom:14px;}
@@ -401,12 +403,30 @@ function startSession(){
 
 function currentQ(){ return state.session[state.index]; }
 
+function updateScoreArea(){
+  const el = document.getElementById('scoreArea');
+  if(state.mode !== 'interactive'){
+    el.textContent = '';
+    el.className = 'score-pill';
+    return;
+  }
+  const answered = state.answers.filter((a,i)=> a.checked && !state.session[i].unconfirmed).length;
+  if(answered === 0){
+    el.textContent = `✓ ${state.score}`;
+    el.className = 'score-pill';
+    return;
+  }
+  const pct = Math.round(state.score/answered*100);
+  el.textContent = `${state.score}/${answered} · ${pct}%`;
+  el.className = 'score-pill ' + (pct>=90 ? 'score-pass' : 'score-fail');
+}
+
 function renderQuestion(){
   const q = currentQ();
   const ans = state.answers[state.index];
   document.getElementById('qCounter').textContent = `Pitanje ${state.index+1}/${state.session.length}`;
   document.getElementById('progressFill').style.width = ((state.index)/state.session.length*100)+'%';
-  document.getElementById('scoreArea').textContent = state.mode==='interactive' ? `✓ ${state.score}` : '';
+  updateScoreArea();
   document.getElementById('chapterTag').textContent = q.chapter + (q.multi ? ' · više tačnih odgovora' : '');
   document.getElementById('qText').textContent = q.text;
 
